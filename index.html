@@ -12,11 +12,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="El Me Liberó">
+    <meta name="apple-mobile-web-app-title" content="Union C">
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
@@ -46,7 +43,7 @@
         [data-theme="dark"] {
             /* TEMA OSCURO */
             --bg-main: #000000; 
-            --surface-color: rgba(0, 0, 33, 0.85); 
+            --surface-color: #000000; 
             --surface-solid: #000000; 
             --text-main: #F8FAFC;
             --text-muted: #94A3B8;
@@ -841,7 +838,7 @@
             const metaThemeColor = document.querySelector('meta[name="theme-color"]');
             if(metaThemeColor) {
                 // #00002F es tu fondo oscuro, #F1F5F9 es tu fondo claro
-                metaThemeColor.setAttribute("content", theme === 'dark' ? "#00002F" : "#F1F5F9");
+                metaThemeColor.setAttribute("content", theme === 'dark' ? "#000000" : "#F1F5F9");
             }
         }
 
