@@ -1,0 +1,22 @@
+{
+  "name": "El Me Liberó",
+  "short_name": "El Me Liberó",
+  "description": "Reproductor de himnos y cantos cristianos",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#00013B",
+  "theme_color": "#00013B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "el-me-libero.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "el-me-libero.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

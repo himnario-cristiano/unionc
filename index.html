@@ -1,0 +1,2176 @@
+<!DOCTYPE html>   
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Me Liberó</title>
+
+    <link rel="icon" href="el-me-libero.png" type="image/png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00013B">
+    <link rel="apple-touch-icon" href="el-me-libero.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="El Me Liberó">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <style>
+        /* ================= VARIABLES DUAL THEME ================= */
+        :root {
+            --text-scale: 1; 
+            
+            /* TEMA CLARO */
+            --bg-main: #F1F5F9;
+            --surface-color: rgba(255, 255, 255, 0.9);
+            --surface-solid: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --accent-color: #D97706; 
+            --accent-hover: #B45309;
+            --accent-light: rgba(217, 119, 6, 0.12);
+            --btn-hover-bg: rgba(15, 23, 42, 0.05);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 15px rgba(0,0,0,0.05);
+            --shadow-player: 0 -10px 40px rgba(0,0,0,0.08);
+            --score-bg: #E2E8F0;
+            --danger-color: #DC2626;
+        }
+
+        [data-theme="dark"] {
+            /* TEMA OSCURO */
+            --bg-main: #00013B; 
+            --surface-color: rgba(0, 0, 33, 0.85); 
+            --surface-solid: #00013B; 
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --accent-color: #FACC15; 
+            --accent-hover: #EAB308;
+            --accent-light: rgba(250, 204, 21, 0.15);
+            --btn-hover-bg: rgba(255, 255, 255, 0.08);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 15px rgba(0,0,0,0.8);
+            --shadow-player: 0 -10px 40px rgba(0,0,0,0.9);
+            --score-bg: #00013B;
+            --danger-color: #EF4444;
+        }
+
+        *, *::before, *::after { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            font-family: 'Inter', sans-serif; 
+        }
+
+        html, body { 
+            background: var(--bg-main);
+            color: var(--text-main);
+            width: 100vw; 
+            height: 100dvh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        input, textarea { user-select: auto; -webkit-user-select: auto; }
+        .audio-engine { position: fixed; opacity: 0; pointer-events: none; }
+
+        /* ================= HEADER ================= */
+        .app-header {
+            background: var(--surface-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: calc(env(safe-area-inset-top) + 12px) 20px 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 15px; z-index: 10; flex-shrink: 0;
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; color: var(--text-main); }
+        .brand img { width: 40px; height: 40px; border-radius: 8px; box-shadow: var(--shadow-sm); }
+
+        .header-actions { display: flex; gap: 6px; position: relative; }
+        
+        .btn-action {
+            background: transparent; border: 1px solid transparent;
+            color: var(--text-muted); cursor: pointer;
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-action:hover { color: var(--accent-color); background: var(--btn-hover-bg); }
+        .btn-action svg { width: 22px; height: 22px; fill: currentColor; stroke: none;}
+        .btn-action.stroke-icon svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;}
+
+        .header-filters { display: flex; gap: 10px; align-items: center; }
+
+        .search-container {
+            display: flex; align-items: center;
+            background: var(--surface-solid);
+            border-radius: 10px; padding: 10px 14px; flex: 1;
+            border: 1px solid var(--border-color);
+        }
+        .search-container:focus-within { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-light); }
+        .search-icon { width: 18px; height: 18px; fill: var(--text-muted); margin-right: 10px; flex-shrink: 0; }
+        .search-input { background: transparent; border: none; color: var(--text-main); font-size: 14px; width: 100%; outline: none; }
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .theme-select {
+            background: var(--surface-solid); color: var(--text-main);
+            border: 1px solid var(--border-color); border-radius: 10px;
+            padding: 10px 12px; font-size: 13px; outline: none; cursor: pointer;
+            max-width: 140px; 
+        }
+        .theme-select:focus { border-color: var(--accent-color); }
+        
+        .fav-filter-btn { border: 1px solid var(--border-color); background: var(--surface-solid); }
+        .fav-filter-btn.active { color: var(--accent-color); border-color: var(--accent-color); background: var(--accent-light); }
+
+        /* ================= PLAYLIST ================= */
+        .playlist-wrapper {
+            flex: 1; overflow-y: auto; padding: 10px 10px 120px 10px; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .playlist-item { 
+            position: relative; width: 100%; display: flex; align-items: center; 
+            padding: 8px 14px; border-radius: 10px; cursor: pointer; 
+            margin-bottom: 6px; background: var(--surface-solid);
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+        }
+        .playlist-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--accent-color); }
+        .playlist-item.active { background: var(--accent-light); border-color: var(--accent-color); }
+        .playlist-item.active .song-title-list { color: var(--accent-color); }
+        
+        .song-info-list { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+        .song-title-list { font-size: calc(15px * var(--text-scale)); font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-artist-list { font-size: calc(12px * var(--text-scale)); color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400;}
+
+        .song-actions-wrapper { display: flex; align-items: center; }
+        .primary-actions { display: flex; align-items: center; }
+        
+        .action-list-btn {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; padding: 8px; display: flex; align-items: center;
+            justify-content: center; border-radius: 50%; margin-left: 2px;
+        }
+        .action-list-btn:hover { color: var(--accent-color); background: var(--btn-hover-bg); }
+        .action-list-btn svg { width: 20px; height: 20px; fill: currentColor; }
+        .action-list-btn.stroke-icon svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;}
+        
+        .fav-btn.active { color: var(--accent-color); }
+        .fav-btn.active svg { fill: var(--accent-color); stroke: var(--accent-color); }
+
+        .more-options-btn { display: none; }
+
+        /* ================= BOTTOM PLAYER ================= */
+        .bottom-player { 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: var(--surface-color);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid var(--border-color);
+            padding: 0 0 calc(env(safe-area-inset-bottom) + 12px) 0;
+            display: flex; flex-direction: column; z-index: 50;
+            box-shadow: var(--shadow-player);
+        }
+
+        .progress-container { 
+            width: 100%; display: flex; align-items: center; padding: 0 20px;
+            margin-top: 10px; position: relative; z-index: 2; gap: 12px;
+        }
+        .time-text { font-size: calc(11px * var(--text-scale)); color: var(--text-muted); font-weight: 600; min-width: 35px;}
+        
+        .progress-bar-bg { 
+            flex: 1; height: 6px; background: var(--border-color); 
+            border-radius: 3px; cursor: pointer; position: relative; overflow: hidden;
+        }
+        .progress-bar-fill { 
+            height: 100%; background: var(--accent-color); border-radius: 3px; width: 0%; 
+            position: relative; transition: width 0.1s linear;
+        }
+
+        .player-content {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 20px 0 20px; gap: 15px;
+        }
+
+        .player-info { display: flex; align-items: center; flex: 1; overflow: hidden; }
+        .info-text { display: flex; flex-direction: column; overflow: hidden; width: 100%; }
+        .title-current { font-size: calc(16px * var(--text-scale)); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);}
+        .artist-current { font-size: calc(13px * var(--text-scale)); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;}
+
+        .player-controls { display: flex; align-items: center; gap: 12px; }
+        
+        .ctrl-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .ctrl-btn:hover { color: var(--accent-color); }
+        .ctrl-btn svg { width: 24px; height: 24px; fill: currentColor; }
+        .ctrl-btn.active-mode { color: var(--accent-color); }
+
+        .btn-play { 
+            background: var(--text-main); color: var(--surface-solid); 
+            border-radius: 50%; width: 50px; height: 50px; box-shadow: var(--shadow-sm);
+        }
+        .btn-play:hover { background: var(--accent-color); color: #fff; transform: scale(1.03); }
+        .btn-play svg { width: 28px; height: 28px; }
+
+        /* Panel de Tamaño de Letra y Zoom */
+        .font-size-panel {
+            display: none; position: absolute; top: 55px; right: 20px;
+            background: var(--surface-solid); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 15px; box-shadow: var(--shadow-md);
+            z-index: 100; flex-direction: column; gap: 12px; min-width: 160px;
+        }
+        .font-size-panel.show { display: flex; }
+        .fs-row { display: flex; align-items: center; justify-content: space-between; }
+        .fs-row button { background: var(--btn-hover-bg); color: var(--text-main); border: none; border-radius: 8px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; }
+        .fs-row button:hover { background: var(--accent-color); color: #fff; }
+        #fsDisplay, #szDisplay { font-weight: 600; font-size: 14px; min-width: 45px; text-align: center; color: var(--text-main); }
+        
+        #fsReset, #szReset { 
+            background: var(--btn-hover-bg); 
+            color: var(--text-main); 
+            border: 1px solid var(--border-color); 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 600; 
+            width: 100%;
+            text-align: center;
+        }
+        #fsReset:hover, #szReset:hover { 
+            background: var(--accent-color); 
+            color: #fff; 
+            border-color: var(--accent-color);
+        }
+
+        /* Modales */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 33, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; backdrop-filter: blur(4px); }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: var(--surface-solid); padding: 30px 25px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; position: relative; transform: translateY(20px); box-shadow: var(--shadow-player); border: 1px solid var(--border-color); color: var(--text-main); max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: var(--btn-hover-bg); border-radius: 50%; border: none; color: var(--text-muted); width: 32px; height: 32px; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .modal-close:hover { background: var(--accent-color); color: #fff; }
+        .modal-content h3 { margin-bottom: 12px; color: var(--text-main); font-size: 20px; font-weight: 700; }
+        .modal-content p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+        
+        .primary-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent-color); color: #fff; border: none; cursor: pointer; padding: 14px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; width: 100%; box-shadow: var(--shadow-sm); }
+        .primary-btn:hover { background: var(--accent-hover); }
+        .whatsapp-btn { background: #10B981; } .whatsapp-btn:hover { background: #059669; }
+        .danger-btn { background: var(--danger-color); } .danger-btn:hover { background: #B91C1C; }
+
+        /* Estilos del Preview de Proyección */
+        .projection-preview-box {
+            width: 100%;
+            height: 60vh;
+            background: #ffffff;
+            border-radius: 10px;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+        .projection-preview-box canvas, .projection-preview-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .proj-page-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,33,0.7);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        /* Barra de progreso sutil para la vista previa modal */
+        .modal-loading-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.2s ease;
+            z-index: 20;
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* ================= MODAL PARTITURA ================= */
+        .score-modal { 
+            position: fixed; top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background: var(--score-bg); z-index: 3000; 
+            display: flex; flex-direction: column; 
+            opacity: 0; pointer-events: none; 
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .score-modal.show { opacity: 1; pointer-events: auto; }
+        
+        .score-modal.with-recording-panel { width: calc(100vw - 320px); }
+
+        .score-header { height: 60px; background: var(--surface-solid); display: flex; justify-content: flex-end; align-items: center; padding: 0 15px; gap: 12px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; position: relative; box-shadow: var(--shadow-sm); }
+        .score-header button.ctrl-btn-score { background: var(--btn-hover-bg); color: var(--text-main); border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .score-header button.ctrl-btn-score:hover { background: var(--accent-color); color: #fff; }
+        .score-header button.ctrl-btn-score svg { width: 22px; height: 22px; fill: currentColor; }
+        .score-body { flex: 1; overflow: auto; background: var(--score-bg); -webkit-overflow-scrolling: touch; padding-bottom: 20px;}
+        
+        .score-body.invert-colors canvas,
+        .score-body.invert-colors img { filter: invert(100%) hue-rotate(180deg) contrast(95%); }
+
+        .canvas-wrapper { display: table; margin: 0 auto; padding: 15px; }
+        
+        .score-body canvas { 
+            display: block; margin-bottom: 15px; background: #fff; 
+            box-shadow: var(--shadow-md); max-width: 100%; height: auto !important; 
+            border-radius: 4px; border: 1px solid #ccc;
+        }
+        .score-body img { 
+            display: block; margin: 15px auto; width: 100%; max-width: 100%; height: auto !important;
+            border-radius: 4px; box-shadow: var(--shadow-md); 
+        }
+        
+        .score-progress-area { position: absolute; bottom: 0; left: 0; width: 100%; height: 14px; cursor: pointer; z-index: 5; background: transparent; display: flex; align-items: center;}
+        .navbar-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent-color); width: 0%; transition: width 0.1s linear; pointer-events: none;}
+
+        .view-score-btn { background: var(--accent-light); color: var(--accent-color); border: 1px solid var(--accent-light); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; margin-top: 10px; }
+        .view-score-btn:hover { background: var(--accent-color); color: #fff; }
+        .ref-theme-badge { font-size: 13px; color: var(--text-main); margin: 0 auto 20px auto; text-align: center; background: var(--btn-hover-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+        .ref-theme-badge span { font-weight: 500; }
+        .ref-list { list-style: none; padding: 0; text-align: left;}
+        .ref-item { background: var(--surface-solid); padding: 14px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-left: 4px solid var(--accent-color); }
+        .ref-hymnal { font-weight: 600; font-size: 14px; color: var(--text-main); }
+        .ref-number { font-weight: bold; color: var(--accent-color); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; font-size: 14px; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ================= VENTANA DE GRABACIÓN ================= */
+        .recording-panel {
+            position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+            background: var(--surface-solid); z-index: 4000;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+            transform: translateX(100%); transition: transform 0.3s ease, height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; border-left: 1px solid var(--border-color);
+        }
+        .recording-panel.show { transform: translateX(0); }
+        
+        .rp-drag-indicator { display: none; }
+        .rp-header { padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .rp-header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .rp-body { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .rp-controls { display: flex; gap: 10px; justify-content: center; align-items: center; background: var(--btn-hover-bg); padding: 15px; border-radius: 12px; flex-shrink: 0;}
+        .rp-btn { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: 0.2s;}
+        .rp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .rp-start { background: var(--danger-color); }
+        .rp-start:hover:not(:disabled) { transform: scale(1.05); }
+        .rp-pause { background: #F59E0B; }
+        .rp-stop { background: #3B82F6; }
+        .rp-time { font-size: 18px; font-weight: bold; font-variant-numeric: tabular-nums; color: var(--text-main);}
+        .recordings-list { display: flex; flex-direction: column; gap: 10px; }
+        
+        .recording-item { background: var(--bg-main); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;}
+        .recording-item-header { display: flex; justify-content: space-between; align-items: center; }
+        .recording-name { font-weight: 600; font-size: 14px; border: none; background: transparent; color: var(--text-main); width: 60%; font-family: 'Inter', sans-serif;}
+        .recording-name:focus { border-bottom: 1px solid var(--accent-color); outline: none; }
+        .recording-actions { display: flex; gap: 5px; }
+        .recording-actions button { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center;}
+        .recording-actions button:hover { background: var(--btn-hover-bg); color: var(--accent-color); }
+
+        /* Media Queries Móviles*/
+        @media (max-width: 767px) {
+            .app-header { padding: calc(env(safe-area-inset-top) + 10px) 15px 15px 15px; }
+            .playlist-wrapper { padding: 5px 5px 125px 5px; }
+
+            .project-btn-desktop { display: none !important; }
+
+            .canvas-wrapper { padding: 5px; }
+            .score-body canvas { margin-bottom: 6px; }
+            .score-body img { margin: 6px auto; }
+            
+            .playlist-item { padding: 5px 8px; margin-bottom: 4px; border-radius: 8px; }
+            .song-title-list { font-size: calc(14px * var(--text-scale)); }
+            .song-artist-list { font-size: calc(11px * var(--text-scale)); }
+
+            .header-filters { flex-wrap: nowrap; gap: 8px; }
+            .search-container { flex: 1; min-width: 0; order: 1; padding: 8px 10px;}
+            .theme-select { flex: 0 1 auto; order: 2; max-width: 110px; padding: 8px; font-size: 12px; }
+            .fav-filter-btn { order: 3; width: 38px; height: 38px; flex-shrink: 0; }
+            
+            .player-content { padding: 8px 15px 0 15px; gap: 10px;}
+            .player-controls { gap: 8px; }
+            .btn-hide-mobile { display: none; } 
+            .btn-play { width: 44px; height: 44px; }
+            
+            .more-options-btn { display: flex; }
+            .song-actions-wrapper {
+                display: none; position: absolute; right: 55px; top: 50%;
+                transform: translateY(-50%); background: var(--surface-solid);
+                padding: 5px; border-radius: 12px; box-shadow: var(--shadow-md);
+                border: 1px solid var(--border-color); z-index: 100;
+            }
+            .song-actions-wrapper.show { display: flex; flex-direction: row; gap: 4px; }
+
+            .rp-drag-indicator { display: block; width: 36px; height: 5px; background: var(--text-muted); border-radius: 3px; margin: 0 auto 8px auto; opacity: 0.4;}
+            .rp-header { cursor: pointer; padding: 12px 15px; display: flex; flex-direction: column; align-items: stretch; -webkit-tap-highlight-color: transparent;}
+            .recording-panel { top: auto; bottom: 0; right: 0; width: 100%; height: 160px; transform: translateY(100%); border-left: none; border-top: 1px solid var(--border-color); border-radius: 20px 20px 0 0;}
+            .recording-panel.show { transform: translateY(0); }
+            .recording-panel.expanded { height: 60vh; }
+            .score-modal.with-recording-panel { width: 100vw; height: calc(100vh - 160px); }
+            .score-modal.with-recording-panel.expanded { height: 40vh; }
+            .recording-panel:not(.expanded) .rp-body { overflow: hidden; }
+            .recording-panel:not(.expanded) .recordings-list { opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+            .recording-panel.expanded .recordings-list { opacity: 1; pointer-events: auto; transition: opacity 0.3s 0.2s; }
+        }
+
+        .install-banner { position: fixed; top: 0; left: 0; width: 100%; background: var(--accent-color); color: var(--bg-main); display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 12px) 20px 12px 20px; box-shadow: var(--shadow-md); transform: translateY(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        .install-banner.show { transform: translateY(0); }
+        .install-banner-info { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px;}
+        .install-banner-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-install { background: var(--bg-main); color: var(--accent-color); border: none; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .btn-close-banner { background: none; border: none; color: var(--bg-main); cursor: pointer; display: flex; }
+        .btn-close-banner svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* ================= PESTAÑAS PARA MODALES ================= */
+.modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+    width: 100%;
+}
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+.tab-content {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+}
+.tab-content.active { display: flex; }
+        /* ================= MÉTODOS DE PAGO Y BOTÓN COPIAR ================= */
+.payment-method {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--btn-hover-bg);
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.payment-info {
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+.payment-info strong {
+    color: var(--accent-color);
+}
+.copy-btn {
+    background: var(--surface-solid);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+.copy-btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+.copy-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+    </style>
+</head>
+<body>
+<!-- ================= MODAL DE LOGIN ================= -->
+   <!-- <div class="modal-overlay show" id="loginModal" style="background: var(--bg-main); z-index: 9999; opacity: 1; pointer-events: auto;">
+        <div class="modal-content" style="box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <div class="brand" style="justify-content: center; margin-bottom: 20px;">
+                <img src="el-me-libero.png" alt="Logo" style="width: 70px; height: 70px; border-radius: 15px;">
+            </div>
+            <h3 style="margin-bottom: 20px;">Iniciar Sesión</h3>
+            
+            <input type="text" id="loginUser" placeholder="Usuario" style="width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 16px; outline: none;">
+            
+            <input type="password" id="loginPass" placeholder="Contraseña" style="width: 100%; padding: 14px; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 16px; outline: none;">
+            
+            <button id="btnLoginAction" class="primary-btn" style="margin-bottom: 12px;">Ingresar</button>
+            
+            <p id="loginMessage" style="font-size: 14px; margin-top: 15px; display: none; font-weight: 500;"></p>
+        </div>
+    </div> -->
+    
+    <div class="install-banner" id="installBanner">
+        <div class="install-banner-info">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Instalar El Me Liberó
+        </div>
+        <div class="install-banner-actions">
+            <button class="btn-install" id="btnInstallApp">Instalar</button>
+            <button class="btn-close-banner" id="btnCloseBanner"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+        </div>
+    </div>
+    
+    <!-- Reemplaza tu etiqueta de audio actual por esta: -->
+<audio id="audioPlayer1" class="audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous" style="position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;" controls></audio>
+
+    <header class="app-header">
+        <div class="header-top">
+            <div class="brand">
+                <img src="https://i.postimg.cc/8kJSRGkM/el-me-libero.png" alt="Logo">
+                El Me Liberó
+            </div>
+            <div class="header-actions">
+                <button class="btn-action stroke-icon" id="themeToggleBtn" title="Cambiar Tema">
+                    <svg viewBox="0 0 24 24" id="themeIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <button class="btn-action stroke-icon" id="clearBtn" title="Limpiar datos">
+                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+                <button class="btn-action stroke-icon" id="helpBtn" title="Ayuda">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </button>
+                <button class="btn-action stroke-icon" id="textSizeBtn" title="Tamaño Letra">
+                    <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                </button>
+                
+                <div class="font-size-panel" id="textSizePanel">
+                    <div class="fs-row">
+                        <button id="fsDecrease">-</button>
+                        <span id="fsDisplay">100%</span>
+                        <button id="fsIncrease">+</button>
+                    </div>
+                    <button id="fsReset">Restablecer</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-filters">
+            <div class="search-container">
+                <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar himno..." autocomplete="off">
+            </div>
+            <select id="themeFilter" class="theme-select" style="display: none;">
+                <option value="all">Todos los temas</option>
+            </select>
+            <button class="btn-action stroke-icon fav-filter-btn" id="favFilterBtn" title="Solo Favoritos" style="display: none;">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="playlist-wrapper" id="playlistItems"></main>
+
+    <div class="bottom-player" id="nowPlaying">
+        <div class="progress-container">
+            <span class="time-text" id="currTime">0:00</span>
+            <div class="progress-bar-bg" id="progressArea">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <span class="time-text" id="totalTime">0:00</span>
+        </div>
+
+        <div class="player-content">
+            <div class="player-info">
+                <div class="info-text">
+                    <span class="title-current" id="title">Cargando...</span>
+                    <span class="artist-current" id="artist">Selecciona un himno</span>
+                </div>
+            </div>
+            
+            <div class="player-controls">
+                <button class="ctrl-btn" id="modeBtn" title="Modo de reproducción">
+                    <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+                </button>
+                <button class="ctrl-btn" id="prevBtn">
+                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="ctrl-btn btn-play" id="playBtn">
+                    <svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="ctrl-btn" id="nextBtn">
+                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales de Sistema -->
+    <!-- Modal de Ayuda (Actualizado con Pestañas) -->
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+        <button class="modal-close" id="closeModalBtn">&times;</button>
+        
+        <!-- Contenedor de Pestañas -->
+        <div class="modal-tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'soporte')">Soporte</button>
+            <button class="tab-btn" onclick="switchTab(event, 'donativo')">Donativo</button>
+        </div>
+
+        <!-- Contenido: Pestaña Soporte -->
+        <div id="tab-soporte" class="tab-content active">
+            <h3>Soporte Técnico</h3>
+            <p>¿Deseas compartir audios o sugerir mejoras para enriquecer nuestro reproductor?</p>
+            <button id="btnWhatsappContact" class="primary-btn whatsapp-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Contactar por WhatsApp
+            </button>
+        </div>
+
+        <!-- Contenido: Pestaña Donativo -->
+        <div id="tab-donativo" class="tab-content">
+            <h3>Apoya el Proyecto</h3>
+            <p style="margin-bottom: 15px;">Tu Donativo nos ayuda a mantener y mejorar esta aplicación. Selecciona un método:</p>
+            <div style="display: flex; flex-direction: row; gap: 10px;">
+                <button id="btnMetodo1" class="primary-btn" style="background: #00B2A9; color:#000000; flex: 1;">Desde Perú</button>
+                <button id="btnMetodo2" class="primary-btn" style="background: #003087; flex: 1;">Otro País</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Método de Peru -->
+<div class="modal-overlay" id="payModal1">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('payModal1').classList.remove('show')">&times;</button>
+        <h3>Billetera Digital en Perú</h3>
+        
+        <div class="payment-method">
+            <div class="payment-info">
+                <strong>Yape / Plin:</strong> <span id="txt-yape">935180887</span><br>
+                <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('txt-yape', this)" title="Copiar número">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Método de Otro Pais -->
+<div class="modal-overlay" id="payModal2">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('payModal2').classList.remove('show')">&times;</button>
+        <h3>Billetera Digital (Dólares)</h3>
+        
+        <div class="payment-method">
+            <div class="payment-info">
+                <strong>BINANCE:</strong> <span id="txt-binance">935180887</span><br>
+                <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('txt-binance', this)" title="Copiar ID">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </button>
+        </div>
+
+        <div class="payment-method">
+            <div class="payment-info">
+                <strong>PayPal:</strong> <span id="txt-paypal">jehisson43@gmail.com</span><br>
+                <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('txt-paypal', this)" title="Copiar correo">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+    <div class="modal-overlay" id="clearModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeClearModalBtn">&times;</button>
+            <h3 style="color: var(--danger-color);">Restablecer App</h3>
+            <p>Se borrarán tus preferencias (tamaño de letra, tema) y canciones favoritas guardadas. Ideal si la app presenta errores.</p>
+            <button id="btnConfirmClear" class="primary-btn danger-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Confirmar Limpieza
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="refModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeRefModalBtn">&times;</button>
+            <h3 id="refModalTitle">Referencias</h3>
+            <div id="refModalBody"></div>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL DE VISTA DE PRESENTADOR (PROYECCIÓN) -->
+    <div class="modal-overlay" id="projectionModal">
+        <div class="modal-content" style="max-width: 800px; padding: 20px;">
+            <button class="modal-close" id="closeProjectionModalBtn">&times;</button>
+            <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="12" rx="2" ry="2"></rect><polygon points="12 21 8 21 9 17 15 17 16 21 12 21"></polygon></svg>
+                Control de Proyección
+            </h3>
+            <p id="projectionModalSongName" style="color: var(--accent-color); font-weight: bold; font-size: 16px; margin-bottom: 10px;"></p>
+            
+            <!-- Lienzo de Vista Previa -->
+            <div class="projection-preview-box">
+                <div class="modal-loading-bar" id="modalLoadingBar"></div>
+                <div class="proj-page-indicator" id="projPageIndicator"></div>
+                <canvas id="projectionPreviewCanvas" style="display: none;"></canvas>
+                <img id="projectionPreviewImage" style="display: none;" />
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="projPrevBtn" class="primary-btn" style="width: auto; background: var(--btn-hover-bg); color: var(--text-main); border: 1px solid var(--border-color);">&larr; Anterior</button>
+                <button id="projNextBtn" class="primary-btn" style="width: auto;">Siguiente &rarr;</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE LECTURA REGULAR -->
+    <div class="score-modal" id="scoreModal">
+        <div class="score-header">
+            <div id="scorePageIndicator" style="color: var(--text-muted); font-size: 14px; margin-right: auto; font-weight: 600; display: none;"></div>
+            <button id="scorePlayPauseBtn" class="ctrl-btn-score" title="Reproducir/Pausar Himno">
+                <svg viewBox="0 0 24 24" id="scorePlayIcon"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button id="scoreInvertBtn" class="ctrl-btn-score" title="Invertir Colores del PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button id="scoreZoomToggle" class="ctrl-btn-score" title="Ajustar Zoom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+            </button>
+            <button id="openRecordPanelBtn" class="ctrl-btn-score" title="Grabar Audio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            </button>
+            <button class="modal-close" id="closeScoreModal" style="position:static; margin-left:10px;">&times;</button>
+            
+            <div class="font-size-panel" id="scoreZoomPanel">
+                <div class="fs-row">
+                    <button id="szDecrease">-</button>
+                    <span id="szDisplay">100%</span>
+                    <button id="szIncrease">+</button>
+                </div>
+                <button id="szReset">Restablecer 100%</button>
+            </div>
+            
+            <div class="score-progress-area" id="scoreProgressArea">
+                <div class="navbar-progress-bar" id="scoreProgressBar"></div>
+            </div>
+        </div>
+        <div class="score-body" id="scoreBody"></div>
+    </div>
+
+    <!-- PANEL LATERAL/INFERIOR DE GRABACIÓN COLLAPSIBLE -->
+    <div class="recording-panel" id="recordingPanel">
+        <div class="rp-header" id="rpHeaderToggle">
+            <div class="rp-drag-indicator"></div>
+            <div class="rp-header-content">
+                <h3 style="font-size: 16px; color: var(--text-main); margin: 0;">Mis Grabaciones</h3>
+                <button class="modal-close" id="closeRecordingPanelBtn" style="position:static;">&times;</button>
+            </div>
+        </div>
+        <div class="rp-body">
+            <div class="rp-controls">
+                <button class="rp-btn rp-start" id="rpStartBtn" title="Grabar"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg></button>
+                <button class="rp-btn rp-pause" id="rpPauseBtn" title="Pausar" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                <button class="rp-btn rp-stop" id="rpStopBtn" title="Detener" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg></button>
+                <span class="rp-time" id="rpTimeDisplay">00:00</span>
+            </div>
+            <div class="recordings-list" id="recordingsList">
+                <!-- Las grabaciones se insertarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script src="user.js"></script>
+    <script src="songs.js"></script>
+    
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const root = document.documentElement;
+
+        const iconSun = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+        const iconMoon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+        const iconProjectSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="12" rx="2" ry="2"></rect><polygon points="12 21 8 21 9 17 15 17 16 21 12 21"></polygon></svg>`;
+        
+        function applyTheme(theme) {
+            root.setAttribute('data-theme', theme);
+            themeIcon.innerHTML = theme === 'dark' ? iconSun : iconMoon;
+            
+            // Esto actualiza dinámicamente el color de la barra superior e inferior del celular
+            const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            if(metaThemeColor) {
+                // #00002F es tu fondo oscuro, #F1F5F9 es tu fondo claro
+                metaThemeColor.setAttribute("content", theme === 'dark' ? "#00002F" : "#F1F5F9");
+            }
+        }
+
+        function getAutomaticTheme() {
+            const horaLocal = new Date().getHours();
+            if (horaLocal >= 18 || horaLocal < 6) { return 'dark'; }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        const savedTheme = localStorage.getItem('app-theme') || getAutomaticTheme();
+        applyTheme(savedTheme);
+
+        setInterval(() => {
+            if (!localStorage.getItem('app-theme')) {
+                const timeTheme = getAutomaticTheme();
+                if (root.getAttribute('data-theme') !== timeTheme) { applyTheme(timeTheme); }
+            }
+        }, 60000);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+            localStorage.setItem('app-theme', newTheme);
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // ==============================================================
+        // VARIABLES GLOBALES DE PROYECTOR Y VISTA DE PRESENTADOR 
+        let projectorWin = null;
+        let previewPdfDoc = null;
+        let previewCurrentPage = 1;
+        let previewTotalPages = 1;
+        
+        const projectionModal = document.getElementById('projectionModal');
+        const closeProjectionModalBtn = document.getElementById('closeProjectionModalBtn');
+        const projectionModalSongName = document.getElementById('projectionModalSongName');
+        const projPrevBtn = document.getElementById('projPrevBtn');
+        const projNextBtn = document.getElementById('projNextBtn');
+        const projPageIndicator = document.getElementById('projPageIndicator');
+        const previewCanvas = document.getElementById('projectionPreviewCanvas');
+        const previewImage = document.getElementById('projectionPreviewImage');
+        const modalLoadingBar = document.getElementById('modalLoadingBar');
+
+        let previewCache = {};
+
+        // Función para renderizar con Caché y Pre-carga
+        function renderPreviewPage(num) {
+            if (!previewPdfDoc) return;
+            projPageIndicator.innerText = `Pág. ${num} - ${previewTotalPages}`;
+            
+            // 1. Si la página ya está en caché, la mostramos instantáneamente
+            if (previewCache[num]) {
+                const cachedCanvas = previewCache[num];
+                previewCanvas.width = cachedCanvas.width;
+                previewCanvas.height = cachedCanvas.height;
+                previewCanvas.getContext('2d').drawImage(cachedCanvas, 0, 0);
+                
+                modalLoadingBar.style.width = '100%';
+                setTimeout(() => { modalLoadingBar.style.width = '0%'; }, 150);
+                
+                // Pre-cargar la siguiente página por si avanza
+                preloadNextPage(num + 1);
+                return;
+            }
+
+            // 2. Si no está en caché, la procesamos por primera vez
+            modalLoadingBar.style.width = '30%';
+            previewPdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: 1.5 });
+                modalLoadingBar.style.width = '60%';
+                
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = viewport.width;
+                offCanvas.height = viewport.height;
+                const ctx = offCanvas.getContext('2d');
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+                page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                    // Guardamos el lienzo procesado en la memoria caché
+                    previewCache[num] = offCanvas;
+                    
+                    previewCanvas.width = viewport.width;
+                    previewCanvas.height = viewport.height;
+                    const visibleCtx = previewCanvas.getContext('2d');
+                    visibleCtx.drawImage(offCanvas, 0, 0);
+                    
+                    modalLoadingBar.style.width = '100%';
+                    setTimeout(() => { modalLoadingBar.style.width = '0%'; }, 250);
+                    
+                    // Pre-cargar la siguiente página de forma silenciosa
+                    preloadNextPage(num + 1);
+                });
+            });
+        }
+
+        // NUEVA FUNCIÓN: Procesa la página siguiente de fondo para que cargue rápido al hacer clic
+        function preloadNextPage(nextNum) {
+            if (!previewPdfDoc || nextNum > previewTotalPages || previewCache[nextNum]) return;
+            
+            previewPdfDoc.getPage(nextNum).then(page => {
+                const viewport = page.getViewport({ scale: 1.5 });
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = viewport.width;
+                offCanvas.height = viewport.height;
+                const ctx = offCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+                // Se renderiza pero no se dibuja en pantalla, va directo a la memoria
+                page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                    previewCache[nextNum] = offCanvas;
+                });
+            }).catch(() => {});
+        }
+
+        // CIERRE DEL MODAL DE PROYECCIÓN
+        closeProjectionModalBtn.addEventListener('click', () => {
+            projectionModal.classList.remove('show');
+        });
+        
+        projectionModal.addEventListener('click', (e) => {
+            if (e.target === projectionModal) {
+                projectionModal.classList.remove('show');
+            }
+        });
+
+        projNextBtn.addEventListener('click', () => {
+            if (projectorWin && !projectorWin.closed && typeof projectorWin.nextPage === 'function') {
+                projectorWin.nextPage();
+                
+                if (previewPdfDoc && previewCurrentPage < previewTotalPages) {
+                    previewCurrentPage++;
+                    renderPreviewPage(previewCurrentPage);
+                }
+            }
+        });
+        
+        projPrevBtn.addEventListener('click', () => {
+            if (projectorWin && !projectorWin.closed && typeof projectorWin.prevPage === 'function') {
+                projectorWin.prevPage();
+                
+                if (previewPdfDoc && previewCurrentPage > 1) {
+                    previewCurrentPage--;
+                    renderPreviewPage(previewCurrentPage);
+                }
+            }
+        });
+        // ==============================================================
+
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) { e.preventDefault(); return false; }
+            
+            if ((scoreModal.classList.contains('show') || projectionModal.classList.contains('show')) && projectorWin && !projectorWin.closed) {
+                if (['ArrowRight', 'ArrowDown', 'Space', 'PageDown', 'Enter'].includes(e.code)) {
+                    e.preventDefault();
+                    if(typeof projectorWin.nextPage === 'function') {
+                        projectorWin.nextPage();
+                        
+                        if (scoreModal.classList.contains('show')) {
+                            let c = document.querySelector('.score-body canvas[data-page-num="' + projectorWin.currentPage + '"]');
+                            if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                        
+                        if (projectionModal.classList.contains('show') && previewPdfDoc && previewCurrentPage < previewTotalPages) {
+                            previewCurrentPage++;
+                            renderPreviewPage(previewCurrentPage);
+                        }
+                    }
+                } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.code)) {
+                    e.preventDefault();
+                    if(typeof projectorWin.prevPage === 'function') {
+                        projectorWin.prevPage();
+                        
+                        if (scoreModal.classList.contains('show')) {
+                            let c = document.querySelector('.score-body canvas[data-page-num="' + projectorWin.currentPage + '"]');
+                            if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                        
+                        if (projectionModal.classList.contains('show') && previewPdfDoc && previewCurrentPage > 1) {
+                            previewCurrentPage--;
+                            renderPreviewPage(previewCurrentPage);
+                        }
+                    }
+                }
+            }
+        });
+
+        const clearBtn = document.getElementById('clearBtn');
+        const clearModal = document.getElementById('clearModal');
+        const closeClearModalBtn = document.getElementById('closeClearModalBtn');
+        const btnConfirmClear = document.getElementById('btnConfirmClear');
+
+        clearBtn.addEventListener('click', (e) => { e.stopPropagation(); clearModal.classList.add('show'); });
+        closeClearModalBtn.addEventListener('click', () => clearModal.classList.remove('show'));
+        clearModal.addEventListener('click', (e) => { if (e.target === clearModal) clearModal.classList.remove('show'); });
+        btnConfirmClear.addEventListener('click', () => { window.location.href = "/elmelibero/clearcookies/"; });
+        
+        let activeAudio = document.getElementById("audioPlayer1");
+let isGlobalAudioUnlocked = false;
+let backgroundPlaybackExpected = false;
+let intentionalPause = true; 
+let audioCtx; // <-- NUEVA VARIABLE GLOBAL
+
+function initializeGlobalPermissions() {
+    if (isGlobalAudioUnlocked) return;
+    if ("Notification" in window && Notification.permission === "default") { Notification.requestPermission().catch(() => {}); }
+    
+    // --- TRUCO ANTI-AHORRO DE ENERGÍA Y SEGUNDO PLANO ---
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        
+        // Creamos un oscilador inaudible (volumen 0) que corre de fondo
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0; // Totalmente silenciado
+        gainNode.connect(audioCtx.destination);
+        
+        const oscillator = audioCtx.createOscillator();
+        oscillator.frequency.value = 1; // Frecuencia inaudible
+        oscillator.connect(gainNode);
+        oscillator.start();
+    } catch (e) {
+        console.log("Web Audio API no soportado", e);
+    }
+    // ----------------------------------------------------
+
+    isGlobalAudioUnlocked = true;
+    document.removeEventListener('click', initializeGlobalPermissions);
+    document.removeEventListener('touchstart', initializeGlobalPermissions);
+}
+document.addEventListener('click', initializeGlobalPermissions, { once: true });
+document.addEventListener('touchstart', initializeGlobalPermissions, { once: true });
+
+        const globalCoverUrl = "https://i.postimg.cc/8kJSRGkM/el-me-libero.png";
+        let songIndex = 0; let isPlaying = false; let showOnlyFavorites = false; let playbackMode = 0; let isBuffering = false;
+
+        const playlistEl = document.getElementById("playlistItems");
+        const titleEl = document.getElementById("title");
+        const artistEl = document.getElementById("artist");
+        const playBtn = document.getElementById("playBtn");
+        const playIcon = document.getElementById("playIcon");
+        const scorePlayIcon = document.getElementById("scorePlayIcon"); 
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const modeBtn = document.getElementById("modeBtn");
+        const progressBar = document.getElementById("progressBar");
+        const progressArea = document.getElementById("progressArea");
+        const scoreProgressBar = document.getElementById("scoreProgressBar"); 
+        const scoreProgressArea = document.getElementById("scoreProgressArea");
+        const currTimeEl = document.getElementById("currTime");
+        const totalTimeEl = document.getElementById("totalTime");
+        const searchInput = document.getElementById("searchInput");
+        const favFilterBtn = document.getElementById("favFilterBtn");
+        const themeFilter = document.getElementById("themeFilter");
+
+        const iconPlay = `<path d="M8 5v14l11-7z"/>`;
+        const iconPause = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+        const iconRepeatAll = `<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>`;
+        const iconRepeatOne = `<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg>`;
+        const iconShuffle = `<svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>`;
+
+        modeBtn.addEventListener('click', () => {
+            playbackMode = (playbackMode + 1) % 3;
+            if (playbackMode === 0) { modeBtn.innerHTML = iconRepeatAll; modeBtn.classList.remove('active-mode'); } 
+            else if (playbackMode === 1) { modeBtn.innerHTML = iconRepeatOne; modeBtn.classList.add('active-mode'); } 
+            else { modeBtn.innerHTML = iconShuffle; modeBtn.classList.add('active-mode'); }
+        });
+
+        const iconDownloadSvg = `<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`;
+        const iconBookSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+        const iconDotsSvg = `<svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+
+        function updateFavFilterVisibility() {
+            const hasFavs = songs.some(song => localStorage.getItem('fav_' + song.src) === 'true');
+            if (hasFavs) {
+                favFilterBtn.style.display = ''; 
+            } else {
+                favFilterBtn.style.display = 'none';
+                if (showOnlyFavorites) {
+                    showOnlyFavorites = false;
+                    favFilterBtn.classList.remove('active');
+                }
+            }
+        }
+
+        function initThemeFilter() {
+            let allThemes = [];
+            songs.forEach(song => { if (song.temas && Array.isArray(song.temas)) allThemes = allThemes.concat(song.temas); });
+            const uniqueThemes = [...new Set(allThemes)].sort();
+            uniqueThemes.forEach(tema => {
+                const option = document.createElement("option"); option.value = tema; option.textContent = tema; themeFilter.appendChild(option);
+            });
+            
+            if (uniqueThemes.length === 0) {
+                themeFilter.style.display = 'none';
+            } else {
+                themeFilter.style.display = '';
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!textSizePanel.contains(e.target) && !textSizeBtn.contains(e.target)) textSizePanel.classList.remove('show');
+            if (!e.target.closest('.song-actions-wrapper') && !e.target.closest('.more-options-btn')) {
+                document.querySelectorAll('.song-actions-wrapper.show').forEach(el => el.classList.remove('show'));
+            }
+            if (!recordingPanel.contains(e.target) && !openRecordPanelBtn.contains(e.target) && !e.target.closest('.recording-actions')) {
+                recordingPanel.classList.remove('show', 'expanded');
+                scoreModal.classList.remove('with-recording-panel', 'expanded'); 
+            }
+        });
+
+        const helpBtn = document.getElementById('helpBtn'); const helpModal = document.getElementById('helpModal'); const closeModalBtn = document.getElementById('closeModalBtn');
+        helpBtn.addEventListener('click', (e) => { e.stopPropagation(); helpModal.classList.add('show'); });
+        closeModalBtn.addEventListener('click', () => helpModal.classList.remove('show'));
+        helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.classList.remove('show'); });
+
+        const refModal = document.getElementById('refModal'); const closeRefModalBtn = document.getElementById('closeRefModalBtn');
+        const refModalTitle = document.getElementById('refModalTitle'); const refModalBody = document.getElementById('refModalBody');
+
+        const scoreModal = document.getElementById('scoreModal'); const scoreBody = document.getElementById('scoreBody'); const closeScoreModal = document.getElementById('closeScoreModal');
+        const scoreInvertBtn = document.getElementById('scoreInvertBtn');
+        
+        scoreInvertBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            scoreBody.classList.toggle('invert-colors');
+            scoreInvertBtn.classList.toggle('active-mode', scoreBody.classList.contains('invert-colors'));
+        });
+        
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        if (pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        
+        let pdfDoc = null; let initialScale = null; let currentZoomPercent = 100; let currentScoreIndex = null; 
+        let currentPageNum = 1; let totalPagesNum = 1; const scorePageIndicator = document.getElementById('scorePageIndicator');
+
+        function updatePageIndicator() {
+            if (pdfDoc) { scorePageIndicator.style.display = 'block'; scorePageIndicator.innerText = `${currentPageNum} / ${totalPagesNum}`; } 
+            else { scorePageIndicator.style.display = 'none'; }
+        }
+        
+        const scoreZoomToggle = document.getElementById('scoreZoomToggle'); const scoreZoomPanel = document.getElementById('scoreZoomPanel');
+        const szDecrease = document.getElementById('szDecrease'); const szIncrease = document.getElementById('szIncrease');
+        const szDisplay = document.getElementById('szDisplay'); const szReset = document.getElementById('szReset');
+
+        scoreZoomToggle.addEventListener('click', (e) => { e.stopPropagation(); scoreZoomPanel.classList.toggle('show'); });
+        scoreModal.addEventListener('click', (e) => { if (!scoreZoomPanel.contains(e.target) && !scoreZoomToggle.contains(e.target)) scoreZoomPanel.classList.remove('show'); });
+
+        function updateScoreZoomDisplay() {
+            szDisplay.innerText = `${currentZoomPercent}%`;
+            const img = document.getElementById('scoreImage');
+            if (img) { img.style.width = `${currentZoomPercent}%`; img.style.maxWidth = 'none'; } 
+            else if (pdfDoc && initialScale) { renderAllPages(); }
+        }
+
+        szIncrease.addEventListener('click', () => { currentZoomPercent += 25; updateScoreZoomDisplay(); });
+        szDecrease.addEventListener('click', () => { if (currentZoomPercent > 25) { currentZoomPercent -= 25; updateScoreZoomDisplay(); } });
+        szReset.addEventListener('click', () => { currentZoomPercent = 100; updateScoreZoomDisplay(); });
+        
+        async function renderAllPages() {
+            if (!pdfDoc) return;
+            const previousPage = currentPageNum; scoreBody.innerHTML = ''; 
+            const wrapper = document.createElement('div'); wrapper.className = 'canvas-wrapper'; scoreBody.appendChild(wrapper);
+            const deviceRatio = window.devicePixelRatio || 1; const hdRatio = Math.max(deviceRatio, 2); 
+            const pagePromises = []; for (let num = 1; num <= pdfDoc.numPages; num++) { pagePromises.push(pdfDoc.getPage(num)); }
+            const pages = await Promise.all(pagePromises); const canvasesData = [];
+
+            for (let num = 1; num <= pages.length; num++) {
+                const page = pages[num - 1];
+                if (num === 1 && !initialScale) {
+                    const containerWidth = scoreBody.clientWidth; const unscaledViewport = page.getViewport({scale: 1});
+                    let targetWidth = containerWidth - 40; if (targetWidth > 1200) targetWidth = 1200; 
+                    initialScale = targetWidth / unscaledViewport.width; if (initialScale < 0.2) initialScale = 0.2;
+                }
+                let appliedScale = initialScale * (currentZoomPercent / 100);
+                const cssViewport = page.getViewport({scale: appliedScale}); const renderViewport = page.getViewport({scale: appliedScale * hdRatio});
+                const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                canvas.width = Math.floor(renderViewport.width); canvas.height = Math.floor(renderViewport.height);
+                canvas.style.width = Math.floor(cssViewport.width) + "px"; canvas.style.height = Math.floor(cssViewport.height) + "px";
+                canvas.setAttribute('data-page-num', num); wrapper.appendChild(canvas);
+                canvasesData.push({ canvas, ctx, renderViewport, page });
+            }
+
+            if (previousPage > 0 && previousPage <= canvasesData.length) { canvasesData[previousPage - 1].canvas.scrollIntoView({ behavior: 'instant', block: 'start' }); }
+            for (let i = 0; i < canvasesData.length; i++) {
+                const { canvas, ctx, renderViewport, page } = canvasesData[i];
+                await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+            }
+        }
+        
+        scoreBody.addEventListener('scroll', () => {
+            if (!pdfDoc) return; const canvases = scoreBody.querySelectorAll('canvas');
+            let foundPage = currentPageNum; let minDistance = Infinity;
+            const containerCenter = scoreBody.getBoundingClientRect().top + (scoreBody.clientHeight / 2);
+            canvases.forEach((canvas) => {
+                const rect = canvas.getBoundingClientRect(); const canvasCenter = rect.top + (rect.height / 2);
+                const dist = Math.abs(containerCenter - canvasCenter);
+                if (dist < minDistance) { minDistance = dist; foundPage = parseInt(canvas.getAttribute('data-page-num')) || 1; }
+            });
+            if (foundPage !== currentPageNum) { currentPageNum = foundPage; updatePageIndicator(); }
+        });
+
+        window.openScore = function(event, index) {
+            event.stopPropagation(); currentScoreIndex = index; const url = songs[index].partitura; scoreBody.innerHTML = '';
+            if(scorePlayIcon) { if(songIndex === currentScoreIndex && isPlaying) { scorePlayIcon.innerHTML = iconPause; } else { scorePlayIcon.innerHTML = iconPlay; } }
+
+            recordingPanel.classList.remove('show', 'expanded');
+            scoreModal.classList.remove('with-recording-panel', 'expanded');
+
+            const isPdf = url.toLowerCase().includes('.pdf');
+            let finalUrl = url;
+            if (finalUrl.includes("dropbox.com")) {
+                finalUrl = finalUrl.replace(/[?&]dl=[01]/g, "").replace(/[?&]raw=[01]/g, "");
+                finalUrl = finalUrl.replace("www.dropbox.com", "dl.dropboxusercontent.com");
+            }
+            
+            currentZoomPercent = 100; initialScale = null; pdfDoc = null;
+            szDisplay.innerText = `100%`; scoreZoomPanel.classList.remove('show');
+            currentPageNum = 1; totalPagesNum = 1; updatePageIndicator();
+
+            if (isPdf && pdfjsLib) {
+                pdfjsLib.getDocument(finalUrl).promise.then(function(pdfDoc_) {
+                    pdfDoc = pdfDoc_; totalPagesNum = pdfDoc.numPages; updatePageIndicator(); renderAllPages();
+                }).catch(function() { scoreBody.innerHTML = '<p style="color:var(--text-main); padding:20px; text-align:center;">Error al cargar el PDF.</p>'; });
+            } else {
+                scoreBody.innerHTML = `<div class="canvas-wrapper"><img id="scoreImage" src="${finalUrl}" style="width: 100%;" oncontextmenu="return false;" /></div>`;
+                scorePageIndicator.style.display = 'none';
+            }
+            scoreModal.classList.add('show');
+        };
+
+        // ================= APERTURA DE VENTANA DE PROYECCIÓN (VISTA DE MODERADOR) =================
+        window.openProjection = function(event, index) {
+            event.stopPropagation();
+            
+            const song = songs[index];
+            
+            // 1. Mostrar el modal de control
+            projectionModalSongName.innerText = song.title;
+            projectionModal.classList.add('show');
+
+            let finalUrl = song.partitura;
+            if (!finalUrl) return; 
+            
+            const isPdf = finalUrl.toLowerCase().includes('.pdf');
+            
+            if (finalUrl.includes("dropbox.com")) {
+                finalUrl = finalUrl.replace(/[?&]dl=[01]/g, "").replace(/[?&]raw=[01]/g, "");
+                finalUrl = finalUrl.replace("www.dropbox.com", "dl.dropboxusercontent.com");
+            }
+
+            // 2. Preparar el lienzo de Preview en el Modal
+            previewPdfDoc = null;
+            previewCurrentPage = 1;
+            previewTotalPages = 1;
+            previewCache = {}; // <-- AÑADIR PARA LIMPIAR LA MEMORIA
+            projPageIndicator.innerText = '';
+            modalLoadingBar.style.width = '10%';
+            
+            if (isPdf && pdfjsLib) {
+                previewCanvas.style.display = 'block';
+                previewImage.style.display = 'none';
+                pdfjsLib.getDocument(finalUrl).promise.then(pdf => {
+                    previewPdfDoc = pdf;
+                    previewTotalPages = pdf.numPages;
+                    renderPreviewPage(1);
+                });
+            } else {
+                previewCanvas.style.display = 'none';
+                previewImage.style.display = 'block';
+                previewImage.src = finalUrl;
+                modalLoadingBar.style.width = '100%';
+                setTimeout(() => modalLoadingBar.style.width = '0%', 200);
+            }
+
+            // 3. LOGICA DE INYECCIÓN DINÁMICA
+            if (projectorWin && !projectorWin.closed && typeof projectorWin.loadNewSong === 'function') {
+                projectorWin.loadNewSong(finalUrl, isPdf, song.title);
+            } else {
+                projectorWin = window.open('', 'ProyectorHimnario', 'width=1280,height=720');
+                if (projectorWin) {
+                    const pDoc = projectorWin.document;
+                    pDoc.open();
+                    
+                    const sTag = '<scr' + 'ipt';
+                    const eTag = '</scr' + 'ipt>';
+                    
+                    pDoc.write(`
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Proyección - ${song.title}</title>
+                        <style>
+                            body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; position: relative; }
+                            #content { width: 100%; height: 100%; position: relative; }
+                            
+                            /* Barra de progreso sutil en la parte superior de la segunda pantalla */
+                            #projLoadingBar {
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                height: 4px;
+                                background: #FACC15;
+                                width: 0%;
+                                transition: width 0.2s ease, opacity 0.3s ease;
+                                z-index: 100;
+                            }
+
+                            .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.5s ease; z-index: 1;}
+                            .active-layer { opacity: 1; z-index: 2; }
+                            canvas, img { max-width: 100%; max-height: 100%; object-fit: contain; position: absolute; opacity: 0; transition: opacity 0.3s ease; }
+                            .active { opacity: 1; z-index: 10; }
+                        </style>
+                        ${sTag} src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js">${eTag}
+                    </head>
+                    <body>
+                        <div id="projLoadingBar"></div>
+                        <div id="content"></div>
+                        ${sTag}>
+                            window.currentPage = 1;
+                            window.totalPages = 1;
+
+                            // EVENTO DE ANTICLIC PARA PANTALLA COMPLETA
+                            window.addEventListener('contextmenu', (e) => {
+                                e.preventDefault(); 
+                                if (!document.fullscreenElement) {
+                                    document.documentElement.requestFullscreen().catch(err => {
+                                        console.log("No se pudo iniciar pantalla completa: ", err);
+                                    });
+                                } else {
+                                    document.exitFullscreen();
+                                }
+                            });
+
+                            // FUNCIÓN QUE PERMITE CARGAR UN NUEVO CANTO CON BARRA DE PROGRESO EN SEGUNDO PLANO
+                            window.loadNewSong = function(url, isPdf, title) {
+                                document.title = title;
+                                const content = document.getElementById('content');
+                                const bar = document.getElementById('projLoadingBar');
+                                
+                                // Mantenemos la barra invisible en segundo plano
+                                bar.style.opacity = '0';
+                                bar.style.width = '0%';
+
+                                const newLayer = document.createElement('div');
+                                newLayer.className = 'layer';
+                                content.appendChild(newLayer);
+
+                                window.currentPage = 1;
+                                window.totalPages = 1;
+
+                                if(!isPdf) {
+                                    let img = document.createElement('img');
+                                    img.src = url;
+                                    img.onload = () => {
+                                        bar.style.width = '100%';
+                                        newLayer.appendChild(img);
+                                        img.classList.add('active');
+                                        switchLayers(newLayer);
+                                        setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; }, 300);
+                                    };
+                                } else {
+                                    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                                    
+                                    pdfjsLib.getDocument(url).promise.then(pdf => {
+                                        window.totalPages = pdf.numPages;
+                                        bar.style.width = '30%';
+                                        
+                                        let completedPages = 0;
+                                        let renderPromises = [];
+                                        
+                                        for(let i = 1; i <= window.totalPages; i++) {
+                                            let canvas = document.createElement('canvas');
+                                            canvas.id = 'page-' + i;
+                                            newLayer.appendChild(canvas);
+                                            
+                                            let renderPromise = pdf.getPage(i).then(page => {
+                                                let viewport = page.getViewport({scale: 2.5}); 
+                                                
+                                                let offCanvas = document.createElement('canvas');
+                                                offCanvas.width = viewport.width;
+                                                offCanvas.height = viewport.height;
+                                                let ctx = offCanvas.getContext('2d');
+                                                
+                                                ctx.fillStyle = '#ffffff';
+                                                ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+                                                
+                                                return page.render({canvasContext: ctx, viewport: viewport}).promise.then(() => {
+                                                    canvas.width = viewport.width;
+                                                    canvas.height = viewport.height;
+                                                    canvas.getContext('2d').drawImage(offCanvas, 0, 0);
+                                                    
+                                                    completedPages++;
+                                                    let progress = 30 + Math.floor((completedPages / window.totalPages) * 70);
+                                                    bar.style.width = progress + '%';
+                                                });
+                                            });
+                                            
+                                            renderPromises.push({ index: i, promise: renderPromise });
+                                        }
+
+                                        const firstPage = renderPromises.find(rp => rp.index === 1);
+                                        if(firstPage) {
+                                            firstPage.promise.then(() => {
+                                                switchLayers(newLayer);
+                                                window.showPage(1);
+                                            });
+                                        }
+
+                                        // Esperar a que todas las páginas terminen para ocultar la barra limpiamente
+                                        Promise.all(renderPromises.map(p => p.promise)).then(() => {
+                                            bar.style.width = '100%';
+                                            setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; }, 300);
+                                        });
+
+                                    }).catch(err => {
+                                        console.error("Error al cargar la partitura", err);
+                                        bar.style.opacity = '0';
+                                    });
+                                }
+
+                                function switchLayers(activeLayer) {
+                                    activeLayer.classList.add('active-layer');
+                                    const layers = content.querySelectorAll('.layer');
+                                    layers.forEach(layer => {
+                                        if (layer !== activeLayer) {
+                                            layer.classList.remove('active-layer');
+                                            setTimeout(() => layer.remove(), 600);
+                                        }
+                                    });
+                                }
+                            };
+
+                            window.showPage = function(num) {
+                                if(num < 1 || num > window.totalPages) return;
+                                
+                                const activeLayer = document.querySelector('.active-layer');
+                                if(!activeLayer) return;
+
+                                activeLayer.querySelectorAll('canvas, img').forEach(c => c.classList.remove('active'));
+                                let target = activeLayer.querySelector('#page-' + num);
+                                if(target) target.classList.add('active');
+                                
+                                window.currentPage = num;
+                            };
+
+                            window.nextPage = function() { window.showPage(window.currentPage + 1); };
+                            window.prevPage = function() { window.showPage(window.currentPage - 1); };
+
+                            window.addEventListener('keydown', (e) => {
+                                if(['ArrowRight', 'ArrowDown', 'Space', 'Enter', 'PageDown'].includes(e.code)) {
+                                    window.nextPage();
+                                } else if(['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.code)) {
+                                    window.prevPage();
+                                }
+                            });
+
+                            // EJECUTAR CARGA INICIAL
+                            window.loadNewSong("${finalUrl}", ${isPdf}, "${song.title}");
+                        ${eTag}
+                    </body>
+                    </html>
+                    `);
+                    pDoc.close();
+                } else {
+                    alert('Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para abrir el proyector.');
+                }
+            }
+        };
+
+        // CIERRE DEL MODAL DE PARTITURA REGULAR
+        closeScoreModal.addEventListener('click', () => { 
+            scoreModal.classList.remove('show'); 
+            scoreModal.classList.remove('with-recording-panel', 'expanded');
+            recordingPanel.classList.remove('show', 'expanded');
+            scoreZoomPanel.classList.remove('show'); 
+            scoreBody.innerHTML = ''; 
+            pdfDoc = null; 
+            scorePageIndicator.style.display = 'none'; 
+        });
+
+        document.getElementById('scorePlayPauseBtn').addEventListener('click', (e) => {
+            e.stopPropagation(); if (songIndex !== currentScoreIndex) { selectSong(currentScoreIndex); } else { if (activeAudio.paused || !isPlaying) playSong(); else pauseSong(); }
+        });
+
+        window.openRefModal = function(event, index) {
+            event.stopPropagation(); document.querySelectorAll('.song-actions-wrapper.show').forEach(el => el.classList.remove('show'));
+            const song = songs[index]; refModalTitle.innerText = song.title; let html = ''; let themeHtml = '';
+            if (song.temas && song.temas.length > 0) { themeHtml += `<span>Tema(s): <span style="color:var(--text-muted);">${song.temas.join(", ")}</span></span>`; }
+            if (song.partitura) { themeHtml += `<button class="view-score-btn" onclick="openScore(event, ${index})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Ver Partitura/Letra</button>`; }
+            if (themeHtml) { html += `<div class="ref-theme-badge">${themeHtml}</div>`; }
+            if (song.references && song.references.length > 0) {
+                html += '<ul class="ref-list">'; song.references.forEach(ref => { html += `<li class="ref-item"><span class="ref-hymnal">${ref.hymnal}</span><span class="ref-number">#${ref.number}</span></li>`; }); html += '</ul>';
+            } else { html += '<p style="text-align:center; padding: 20px 0; color: var(--text-muted);">No hay referencias a otros himnarios.</p>'; }
+            refModalBody.innerHTML = html; refModal.classList.add('show');
+        };
+        closeRefModalBtn.addEventListener('click', () => refModal.classList.remove('show')); refModal.addEventListener('click', (e) => { if (e.target === refModal) refModal.classList.remove('show'); });
+
+        const btnWhatsappContact = document.getElementById('btnWhatsappContact');
+        btnWhatsappContact.addEventListener('click', () => {
+            let contactoWhatsapp = "51935180887".replace('@', ''); const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            window.open(isMobile ? `https://api.whatsapp.com/send?phone=${contactoWhatsapp}` : `https://web.whatsapp.com/send?phone=${contactoWhatsapp}`, '_blank');
+        });
+
+        const textSizeBtn = document.getElementById('textSizeBtn'); const textSizePanel = document.getElementById('textSizePanel');
+        const fsDecrease = document.getElementById('fsDecrease'); const fsIncrease = document.getElementById('fsIncrease');
+        const fsDisplay = document.getElementById('fsDisplay'); const fsReset = document.getElementById('fsReset');
+        let currentTextScale = 100;
+        textSizeBtn.addEventListener('click', (e) => { e.stopPropagation(); textSizePanel.classList.toggle('show'); });
+        function applyTextScale() { document.documentElement.style.setProperty('--text-scale', currentTextScale / 100); fsDisplay.innerText = `${currentTextScale}%`; }
+        fsDecrease.addEventListener('click', () => { if (currentTextScale > 60) { currentTextScale -= 10; applyTextScale(); }});
+        fsIncrease.addEventListener('click', () => { if (currentTextScale < 180) { currentTextScale += 10; applyTextScale(); }});
+        fsReset.addEventListener('click', () => { currentTextScale = 100; applyTextScale(); });
+
+        function formatDropboxStreamUrl(url) { if(url.includes("dropbox.com")) return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "").replace("?dl=1", ""); return url; }
+        function formatDropboxDownloadUrl(url) { if(url.includes("dropbox.com")) { let cleanUrl = url.replace("?dl=0", "").replace("?dl=1", ""); return cleanUrl + (cleanUrl.includes("?") ? "&dl=1" : "?dl=1"); } return url; }
+
+        window.downloadSongFile = function(event, index) {
+            event.stopPropagation(); const song = songs[index]; const a = document.createElement('a'); a.href = formatDropboxDownloadUrl(song.src);
+            a.setAttribute('download', `${song.title}.mp3`); a.target = '_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            localStorage.setItem('downloaded_' + song.src, 'true'); renderPlaylist(); 
+        }
+
+        window.toggleFav = function(event, index) {
+            event.stopPropagation(); const song = songs[index]; const key = 'fav_' + song.src;
+            if (localStorage.getItem(key) === 'true') localStorage.removeItem(key); else localStorage.setItem(key, 'true'); 
+            
+            updateFavFilterVisibility(); 
+            renderPlaylist(); 
+        }
+
+        favFilterBtn.addEventListener('click', () => { showOnlyFavorites = !showOnlyFavorites; favFilterBtn.classList.toggle('active', showOnlyFavorites); renderPlaylist(); });
+        searchInput.addEventListener("input", renderPlaylist); themeFilter.addEventListener("change", renderPlaylist);
+        function normalizeStr(str) { if(!str) return ""; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+
+        function getFilteredIndices() {
+            const query = normalizeStr(searchInput.value); const selectedTheme = themeFilter.value; let indices = [];
+            songs.forEach((song, i) => {
+                const matchSearch = normalizeStr(song.title).includes(query) || normalizeStr(song.artist).includes(query);
+                const matchTheme = selectedTheme === 'all' || (song.temas && song.temas.includes(selectedTheme));
+                const isFav = localStorage.getItem('fav_' + song.src) === 'true';
+                if (matchSearch && matchTheme) { if (!showOnlyFavorites || (showOnlyFavorites && isFav)) indices.push(i); }
+            }); return indices;
+        }
+
+        window.toggleOptionsMenu = function(event, index) {
+            event.stopPropagation(); document.querySelectorAll('.song-actions-wrapper.show').forEach(el => { if (el.id !== `actions-${index}`) el.classList.remove('show'); });
+            document.getElementById(`actions-${index}`).classList.toggle('show');
+        }
+
+        function renderPlaylist() {
+    playlistEl.innerHTML = ""; 
+    const filteredIndices = getFilteredIndices();
+    
+    filteredIndices.forEach((index) => {
+        const song = songs[index]; 
+        const item = document.createElement("div"); 
+        item.className = `playlist-item ${index === songIndex ? "active" : ""}`;
+        
+        const isDownloaded = localStorage.getItem('downloaded_' + song.src) === 'true'; 
+        const isFav = localStorage.getItem('fav_' + song.src) === 'true';
+
+        // 1. Verificamos si la canción permite descarga (si no existe la propiedad, asume true)
+        const canDownload = song.allowDownload !== false;
+
+        const favButtonHtml = `<button class="action-list-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(event, ${index})" title="Favorito"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>`;
+        
+        // --- INICIO DE LA ACTUALIZACIÓN ---
+        const tieneReferencias = song.references && song.references.length > 0;
+        const tienePartitura = !!song.partitura;
+        const tieneTemas = song.temas && song.temas.length > 0;
+        const tieneMasOpciones = tieneReferencias || tienePartitura || tieneTemas;
+
+        const refButtonHtml = tieneMasOpciones 
+            ? `<button class="action-list-btn stroke-icon" onclick="openRefModal(event, ${index})" title="Ver en otros Himnarios">${iconBookSvg}</button>`
+            : '';
+            
+        const projectButtonHtml = song.partitura 
+            ? `<button class="action-list-btn stroke-icon project-btn-desktop" onclick="openProjection(event, ${index})" title="Proyectar Partitura">${iconProjectSvg}</button>` 
+            : '';
+
+        // 2. Agregamos '!canDownload' a las condiciones para ocultar el botón si la canción lo restringe
+        const standardDownloadBtn = (isDownloaded || !canDownload) 
+            ? '' : `<button class="action-list-btn" onclick="downloadSongFile(event, ${index})" title="Descargar MP3">${iconDownloadSvg}</button>`;
+            
+        const desktopOnlyDownloadBtn = (isDownloaded || !canDownload) 
+            ? '' : `<button class="action-list-btn btn-hide-mobile" onclick="downloadSongFile(event, ${index})" title="Descargar MP3">${iconDownloadSvg}</button>`;
+            
+        const mobileOnlyDownloadBtn = (isDownloaded || !canDownload) 
+            ? '' : `<button class="action-list-btn more-options-btn" onclick="downloadSongFile(event, ${index})" title="Descargar MP3">${iconDownloadSvg}</button>`;
+
+        const dotsButtonHtml = tieneMasOpciones 
+            ? `<button class="action-list-btn more-options-btn" onclick="toggleOptionsMenu(event, ${index})" title="Opciones">${iconDotsSvg}</button>`
+            : '';
+
+        // En el menú flotante, ponemos el botón de descarga que SOLO se ve en el celular
+        const popupActionsHtml = tieneMasOpciones ? `${refButtonHtml} ${projectButtonHtml} ${mobileOnlyDownloadBtn}` : '';
+        
+        // En la barra principal armamos [Favorito] [Descargar]. 
+        // En PC siempre se verán ambos. 
+        // En Celular, si hay más opciones, el 'desktopOnlyDownloadBtn' se ocultará mágicamente para no duplicarse con el del menú.
+        const mainActionsHtml = tieneMasOpciones ? `${favButtonHtml} ${desktopOnlyDownloadBtn}` : `${favButtonHtml} ${standardDownloadBtn}`;
+
+        item.innerHTML = `
+            <div class="song-info-list" onclick="selectSong(${index})">
+                <span class="song-title-list">${song.title}</span>
+                <span class="song-artist-list">${song.artist}</span>
+            </div>
+            <div class="song-actions-wrapper" id="actions-${index}">
+                ${popupActionsHtml}
+            </div>
+            <div class="primary-actions">
+                ${mainActionsHtml}
+                ${dotsButtonHtml}
+            </div>
+        `;
+        // --- FIN DE LA ACTUALIZACIÓN ---
+        
+        // ESTA ES LA LÍNEA QUE FALTABA PARA QUE SE MUESTREN LOS ITEMS:
+        playlistEl.appendChild(item);
+    });
+}
+        function getUpcomingIndex(currentIndex) {
+            const filtered = getFilteredIndices(); if (filtered.length === 0) return currentIndex; if (playbackMode === 1) return currentIndex; 
+            if (playbackMode === 2) return filtered[Math.floor(Math.random() * filtered.length)]; 
+            const currentIdxInFiltered = filtered.indexOf(currentIndex); return currentIdxInFiltered === -1 ? filtered[0] : filtered[(currentIdxInFiltered + 1) % filtered.length];
+        }
+
+        window.selectSong = function(index) {
+            if (!songs[index]) return; 
+            songIndex = index; 
+            intentionalPause = false; 
+            backgroundPlaybackExpected = true;
+            const song = songs[songIndex]; 
+
+            // 1. Informar al sistema operativo (Lock Screen) inmediatamente
+            updateMediaSession(song);
+
+            activeAudio.src = formatDropboxStreamUrl(song.src);
+            const playPromise = activeAudio.play(); 
+            if (playPromise !== undefined) playPromise.catch(e => console.log(e));
+            
+            // 2. Actualización visual síncrona (Sin setTimeout)
+            titleEl.innerText = song.title || 'Sin título'; 
+            artistEl.innerText = song.artist || ''; 
+            renderPlaylist(); 
+            updatePlayButton(true); 
+            setMediaPlaybackState('playing');
+        };
+
+        function prevSong() {
+            const filtered = getFilteredIndices(); 
+            if (filtered.length === 0) return; 
+            const currentIdxInFiltered = filtered.indexOf(songIndex);
+            let prevIndex = currentIdxInFiltered === -1 ? filtered[0] : filtered[(currentIdxInFiltered - 1 + filtered.length) % filtered.length];
+            songIndex = prevIndex; 
+            intentionalPause = false; 
+            backgroundPlaybackExpected = true; 
+            const song = songs[songIndex];
+
+            // 1. Informar al sistema operativo inmediatamente
+            updateMediaSession(song);
+
+            activeAudio.src = formatDropboxStreamUrl(song.src); 
+            const playPromise = activeAudio.play(); 
+            if (playPromise !== undefined) playPromise.catch(e => console.log(e));
+            
+            // 2. Actualización visual síncrona
+            titleEl.innerText = song.title || 'Sin título'; 
+            artistEl.innerText = song.artist || ''; 
+            renderPlaylist(); 
+            updatePlayButton(true); 
+            setMediaPlaybackState('playing');
+        }
+
+        function transitionToNext(manualClick = false) {
+            const filtered = getFilteredIndices(); 
+            if (filtered.length === 0) return;
+            
+            songIndex = getUpcomingIndex(songIndex); 
+            const song = songs[songIndex]; 
+            
+            // 1. Informar al sistema operativo de la transición en 2do plano
+            updateMediaSession(song);
+
+            // Cambiar la fuente y forzar la carga inmediata
+            activeAudio.src = formatDropboxStreamUrl(song.src);
+            activeAudio.load(); 
+
+            if (isPlaying || manualClick) { 
+                isPlaying = true; 
+                intentionalPause = false; 
+                backgroundPlaybackExpected = true; 
+                
+                // Ejecución síncrona fundamental para no perder el control de audio
+                const playPromise = activeAudio.play(); 
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        setMediaPlaybackState('playing');
+                    }).catch(e => {
+                        console.log("Audio background bloqueado, forzando reintento:", e);
+                        activeAudio.play().catch(()=>{});
+                    });
+                }
+            }
+            
+            // 2. Actualización de UI (Sin requestAnimationFrame que congela en 2do plano)
+            titleEl.innerText = song.title || 'Sin título'; 
+            artistEl.innerText = song.artist || ''; 
+            renderPlaylist(); 
+            if (isPlaying || manualClick) { 
+                updatePlayButton(true); 
+            } 
+        }
+        
+        function setupAudioListeners(audioElement) {
+            audioElement.addEventListener('ended', (e) => {
+    if (songs.length > 0) { 
+        if (document.getElementById('scoreModal').classList.contains('show') && songIndex === currentScoreIndex) { 
+            audioElement.currentTime = 0; 
+            audioElement.play().catch(e => console.log(e)); 
+        } else { 
+            // Iniciar la siguiente pista inmediatamente para mantener el Wake Lock de Audio del SO activo
+            transitionToNext(true); 
+        } 
+    }
+});
+
+// Añade este listener adicional para reconectar el audio si el sistema lo pausa bruscamente
+audioElement.addEventListener('suspend', () => {
+    if (backgroundPlaybackExpected && !intentionalPause && audioElement.paused) {
+        audioElement.play().catch(() => {});
+    }
+});
+            audioElement.addEventListener('timeupdate', (e) => {
+                const { currentTime, duration } = e.target; if (!Number.isFinite(duration) || duration <= 0) return;
+                const progressPercent = Math.min(100, Math.max(0, (currentTime / duration) * 100));
+                progressBar.style.width = `${progressPercent}%`;
+                if(scoreProgressBar) { if (songIndex === currentScoreIndex) { scoreProgressBar.style.width = `${progressPercent}%`; } else { scoreProgressBar.style.width = `0%`; } }
+                let currMins = Math.floor(currentTime / 60); let currSecs = Math.floor(currentTime % 60); currSecs = currSecs < 10 ? `0${currSecs}` : currSecs; currTimeEl.innerText = `${currMins}:${currSecs}`;
+                let totMins = Math.floor(duration / 60); let totSecs = Math.floor(duration % 60); totSecs = totSecs < 10 ? `0${totSecs}` : totSecs; totalTimeEl.innerText = `${totMins}:${totSecs}`;
+            });
+            audioElement.addEventListener('playing', (e) => { isBuffering = false; intentionalPause = false; backgroundPlaybackExpected = true; updatePlayButton(true); setMediaPlaybackState('playing'); });
+            audioElement.addEventListener('play', (e) => { if (!intentionalPause) { backgroundPlaybackExpected = true; updatePlayButton(true); setMediaPlaybackState('playing'); } });
+            audioElement.addEventListener('pause', (e) => {
+                if (isBuffering && !intentionalPause) return;
+                if (!intentionalPause && audioElement.currentTime > 0 && !audioElement.ended) { backgroundPlaybackExpected = true; return; }
+                if (intentionalPause) { backgroundPlaybackExpected = false; updatePlayButton(false); setMediaPlaybackState('paused'); return; }
+                updatePlayButton(false);
+            });
+            audioElement.addEventListener('waiting', (e) => { if (!intentionalPause && !audioElement.ended) { isBuffering = true; updatePlayButton(true); setMediaPlaybackState('playing'); } });
+            audioElement.addEventListener('canplay', (e) => { if (isBuffering && !intentionalPause) { isBuffering = false; setMediaPlaybackState('playing'); if (audioElement.paused) audioElement.play().catch(e => {}); } });
+            audioElement.addEventListener('error', (e) => { if (backgroundPlaybackExpected) { setTimeout(() => audioElement.play().catch(e => {}), 2000); } });
+        }
+
+        function safeMediaAction(action, handler) { if (!('mediaSession' in navigator)) return; try { navigator.mediaSession.setActionHandler(action, handler); } catch (error) {} }
+        function updateMediaSession(song) {
+            if (!('mediaSession' in navigator) || !song) return;
+            try { navigator.mediaSession.metadata = new MediaMetadata({ title: song.title || 'Himno', artist: song.artist || 'Himnario', artwork: [{ src: globalCoverUrl, sizes: '512x512', type: 'image/png' }] }); } catch (error) {}
+            safeMediaAction('play', playSong); safeMediaAction('pause', pauseSong); safeMediaAction('previoustrack', prevSong); safeMediaAction('nexttrack', () => transitionToNext(true));
+            safeMediaAction('seekto', (details) => { if (!Number.isFinite(activeAudio.duration)) return; if (Number.isFinite(details.seekTime)) { activeAudio.currentTime = Math.max( 0, Math.min(activeAudio.duration, details.seekTime) ); } });
+            safeMediaAction('stop', () => { intentionalPause = true; backgroundPlaybackExpected = false; isPlaying = false; try { activeAudio.pause(); } catch (e) {} setMediaPlaybackState('none'); updatePlayButton(false); });
+        }
+        function setMediaPlaybackState(state) { if (!('mediaSession' in navigator)) return; try { navigator.mediaSession.playbackState = state; } catch (error) {} }
+
+        function updatePlayButton(playing) { isPlaying = playing; playIcon.innerHTML = playing ? iconPause : iconPlay; if (scorePlayIcon && songIndex === currentScoreIndex) { scorePlayIcon.innerHTML = playing ? iconPause : iconPlay; } }
+        function playSong() { isPlaying = true; intentionalPause = false; backgroundPlaybackExpected = true; updatePlayButton(true); setMediaPlaybackState("playing"); activeAudio.play().catch(e => console.log(e)); }
+        function pauseSong() { isPlaying = false; intentionalPause = true; backgroundPlaybackExpected = false; updatePlayButton(false); try { activeAudio.pause(); } catch (e) {} setMediaPlaybackState("paused"); }
+        
+        progressArea.addEventListener('click', (e) => {
+            if (!Number.isFinite(activeAudio.duration) || activeAudio.duration <= 0) return;
+            const rect = progressArea.getBoundingClientRect(); const clickX = e.clientX - rect.left;
+            activeAudio.currentTime = Math.max(0, Math.min(1, clickX / rect.width)) * activeAudio.duration;
+        });
+
+        scoreProgressArea.addEventListener('click', (e) => {
+            if (!Number.isFinite(activeAudio.duration) || activeAudio.duration <= 0) return;
+            const rect = scoreProgressArea.getBoundingClientRect(); 
+            const clickX = e.clientX - rect.left;
+            const targetTime = Math.max(0, Math.min(1, clickX / rect.width)) * activeAudio.duration;
+            
+            if (songIndex !== currentScoreIndex) {
+                selectSong(currentScoreIndex);
+                setTimeout(() => { activeAudio.currentTime = targetTime; }, 50);
+            } else {
+                activeAudio.currentTime = targetTime;
+            }
+        });
+
+        playBtn.addEventListener('click', () => { if (activeAudio.paused || !isPlaying) playSong(); else pauseSong(); });
+        prevBtn.addEventListener('click', prevSong); nextBtn.addEventListener('click', () => transitionToNext(true));
+
+        setupAudioListeners(activeAudio);
+
+        function initPlayer() { 
+            initThemeFilter(); 
+            updateFavFilterVisibility(); 
+            
+            if (songs.length > 0) { 
+                const song = songs[songIndex]; 
+                titleEl.innerText = song.title || 'Sin título'; 
+                artistEl.innerText = song.artist || ''; 
+                activeAudio.src = formatDropboxStreamUrl(song.src); 
+                renderPlaylist(); 
+                updateMediaSession(song); 
+            } 
+        }
+        
+        // ================= LÓGICA DE GRABACIÓN & PANTALLA DIVIDIDA ================= //
+        const recordingPanel = document.getElementById('recordingPanel');
+        const openRecordPanelBtn = document.getElementById('openRecordPanelBtn');
+        const closeRecordingPanelBtn = document.getElementById('closeRecordingPanelBtn');
+        const rpHeaderToggle = document.getElementById('rpHeaderToggle');
+        const rpStartBtn = document.getElementById('rpStartBtn');
+        const rpPauseBtn = document.getElementById('rpPauseBtn');
+        const rpStopBtn = document.getElementById('rpStopBtn');
+        const rpTimeDisplay = document.getElementById('rpTimeDisplay');
+        const recordingsList = document.getElementById('recordingsList');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordings = []; 
+        let recInterval;
+        let recSeconds = 0;
+
+        openRecordPanelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!recordingPanel.classList.contains('show')) {
+                recordingPanel.classList.add('show');
+                recordingPanel.classList.remove('expanded'); 
+                
+                scoreModal.classList.add('with-recording-panel');
+                scoreModal.classList.remove('expanded'); 
+            } else {
+                recordingPanel.classList.remove('show', 'expanded');
+                scoreModal.classList.remove('with-recording-panel', 'expanded');
+            }
+        });
+        
+        closeRecordingPanelBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            recordingPanel.classList.remove('show', 'expanded');
+            scoreModal.classList.remove('with-recording-panel', 'expanded');
+        });
+
+        rpHeaderToggle.addEventListener('click', () => {
+            if (recordingPanel.classList.contains('show')) {
+                recordingPanel.classList.toggle('expanded');
+                scoreModal.classList.toggle('expanded'); 
+            }
+        });
+
+        function formatRecTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        rpStartBtn.addEventListener('click', async () => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        recordings.push({
+                            id: Date.now(),
+                            name: `Grabación ${recordings.length + 1}`,
+                            blob: audioBlob,
+                            url: audioUrl
+                        });
+                        audioChunks = [];
+                        renderRecordingsList();
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    rpStartBtn.disabled = true;
+                    rpPauseBtn.disabled = false;
+                    rpStopBtn.disabled = false;
+                    
+                    recSeconds = 0;
+                    rpTimeDisplay.innerText = formatRecTime(recSeconds);
+                    recInterval = setInterval(() => {
+                        recSeconds++;
+                        rpTimeDisplay.innerText = formatRecTime(recSeconds);
+                    }, 1000);
+                } catch (err) {
+                    alert('No se pudo acceder al micrófono o se denegaron los permisos.');
+                }
+            }
+        });
+
+        rpPauseBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.pause();
+                rpPauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                clearInterval(recInterval);
+            } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+                mediaRecorder.resume();
+                rpPauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                recInterval = setInterval(() => {
+                    recSeconds++;
+                    rpTimeDisplay.innerText = formatRecTime(recSeconds);
+                }, 1000);
+            }
+        });
+
+        rpStopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                clearInterval(recInterval);
+                rpStartBtn.disabled = false;
+                rpPauseBtn.disabled = true;
+                rpStopBtn.disabled = true;
+                rpPauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                rpTimeDisplay.innerText = "00:00";
+            }
+        });
+
+        function renderRecordingsList() {
+            recordingsList.innerHTML = '';
+            recordings.forEach((rec, index) => {
+                const item = document.createElement('div');
+                item.className = 'recording-item';
+                
+                item.innerHTML = `
+                    <div class="recording-item-header">
+                        <input type="text" class="recording-name" value="${rec.name}" onchange="updateRecordName(${index}, this.value)" placeholder="Nombre de grabación">
+                        <div class="recording-actions">
+                            <button title="Compartir/Descargar" onclick="shareRecording(${index})">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            </button>
+                            <button title="Eliminar" onclick="deleteRecording(${index})" style="color: var(--danger-color);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <audio controls src="${rec.url}" style="width: 100%; height: 35px;"></audio>
+                `;
+                recordingsList.appendChild(item);
+            });
+        }
+
+        window.updateRecordName = function(index, newName) {
+            recordings[index].name = newName;
+        };
+
+        window.deleteRecording = function(index) {
+            if(confirm('¿Seguro que deseas eliminar esta grabación?')) {
+                URL.revokeObjectURL(recordings[index].url);
+                recordings.splice(index, 1);
+                renderRecordingsList();
+            }
+        };
+
+        window.shareRecording = async function(index) {
+            const rec = recordings[index];
+            const file = new File([rec.blob], rec.name + '.webm', { type: rec.blob.type });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: rec.name,
+                        text: 'Escucha mi grabación'
+                    });
+                } catch (error) {
+                    console.log('Error compartiendo, o acción cancelada.');
+                }
+            } else {
+                const a = document.createElement('a');
+                a.href = rec.url;
+                a.download = rec.name + '.webm';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        };
+
+        // ======================================================= //
+        
+        initPlayer();
+
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.log('SW:', e)); }); }
+        let deferredPrompt; const installBanner = document.getElementById('installBanner'); const btnInstallApp = document.getElementById('btnInstallApp'); const btnCloseBanner = document.getElementById('btnCloseBanner');
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBanner.classList.add('show'); });
+        btnInstallApp.addEventListener('click', async () => { if (deferredPrompt) { installBanner.classList.remove('show'); deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; } });
+        btnCloseBanner.addEventListener('click', () => { installBanner.classList.remove('show'); });
+        window.addEventListener('appinstalled', () => { installBanner.classList.remove('show'); deferredPrompt = null; });
+
+        // ================= LOGICA PARA PESTAÑAS DEL MODAL DE AYUDA ================= //
+window.switchTab = function(event, tabId) {
+    // Quita la clase 'active' de todos los botones de pestaña
+    const modalContent = event.target.closest('.modal-content');
+    modalContent.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Quita la clase 'active' de todos los contenidos
+    modalContent.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Agrega 'active' a la pestaña clickeada y a su contenido respectivo
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
+};
+
+// ================= LOGICA PARA ABRIR LOS MODALES DE PAGO ================= //
+document.getElementById('btnMetodo1').addEventListener('click', () => {
+    document.getElementById('helpModal').classList.remove('show'); // Cierra modal principal (Opcional)
+    document.getElementById('payModal1').classList.add('show');
+});
+
+document.getElementById('btnMetodo2').addEventListener('click', () => {
+    document.getElementById('helpModal').classList.remove('show'); // Cierra modal principal (Opcional)
+    document.getElementById('payModal2').classList.add('show');
+});
+
+// Cierre al hacer clic fuera del contenido en los nuevos modales
+['payModal1', 'payModal2'].forEach(id => {
+    const modal = document.getElementById(id);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+    });
+});
+        // ================= FUNCIÓN PARA COPIAR AL PORTAPAPELES ================= //
+window.copyToClipboard = function(elementId, btnElement) {
+    const textToCopy = document.getElementById(elementId).innerText;
+    
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        // Guardamos el icono original
+        const originalIcon = btnElement.innerHTML;
+        
+        // Cambiamos al icono de Check (Éxito)
+        btnElement.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+        btnElement.style.color = "#10B981"; // Verde
+        btnElement.style.borderColor = "#10B981";
+
+        // Restauramos el botón después de 2 segundos
+        setTimeout(() => {
+            btnElement.innerHTML = originalIcon;
+            btnElement.style.color = "";
+            btnElement.style.borderColor = "";
+        }, 2000);
+    }).catch(err => {
+        console.error('Error al intentar copiar: ', err);
+    });
+};
+
+        // ================= SISTEMA DE LOGIN CON FECHA DE CADUCIDAD =================
+        const loginModal = document.getElementById('loginModal');
+        const loginUser = document.getElementById('loginUser');
+        const loginPass = document.getElementById('loginPass');
+        const btnLoginAction = document.getElementById('btnLoginAction');
+        const loginMessage = document.getElementById('loginMessage');
+
+        // Obtiene la fecha actual en formato "YYYY-MM-DD"
+        const hoy = new Date().toISOString().split('T')[0];
+
+        // Verificar si ya hay una sesión activa y válida al abrir la app
+        const sesionGuardada = localStorage.getItem('sesionActiva');
+        if (sesionGuardada && usuariosDB[sesionGuardada]) {
+            if (hoy <= usuariosDB[sesionGuardada].expira) {
+                loginModal.style.display = 'none'; // Sesión válida y vigente
+            } else {
+                localStorage.removeItem('sesionActiva'); // Sesión expirada, forzar nuevo login
+            }
+        }
+
+        function mostrarMensaje(texto, color) {
+            loginMessage.innerText = texto;
+            loginMessage.style.color = color;
+            loginMessage.style.display = 'block';
+        }
+
+        btnLoginAction.addEventListener('click', () => {
+            const user = loginUser.value.trim();
+            const pass = loginPass.value.trim();
+
+            if (usuariosDB[user]) {
+                if (usuariosDB[user].pass === pass) {
+                    if (hoy <= usuariosDB[user].expira) {
+                        // Credenciales correctas y cuenta vigente
+                        localStorage.setItem('sesionActiva', user);
+                        loginModal.style.display = 'none'; 
+                    } else {
+                        // Fecha caducada
+                        mostrarMensaje(`Tu acceso expiró el ${usuariosDB[user].expira}.`, "var(--danger-color)");
+                    }
+                } else {
+                    mostrarMensaje("Contraseña incorrecta.", "var(--danger-color)");
+                }
+            } else {
+                mostrarMensaje("El usuario no existe.", "var(--danger-color)");
+            }
+        });
+        // ================= FIN SISTEMA DE LOGIN =================
+
+        // --- FORZAR REPRODUCCIÓN AL BLOQUEAR PANTALLA O MINIMIZAR ---
+document.addEventListener("visibilitychange", () => {
+    // Si la app pasa a segundo plano o se apaga la pantalla
+    if (document.hidden) {
+        // Si debería estar sonando y se pausó por el ahorro de energía, lo forzamos a reproducir
+        if (backgroundPlaybackExpected && !intentionalPause && activeAudio.paused) {
+            activeAudio.play().catch(() => {});
+        }
+    }
+    
+    // Asegurarnos de que el contexto de audio silencioso despierte si el sistema lo durmió
+    if (audioCtx && audioCtx.state === 'suspended' && backgroundPlaybackExpected && !intentionalPause) {
+        audioCtx.resume();
+    }
+});
+
+// Intervalo de seguridad para reconectar el audio en caso de que el sistema operativo mate el proceso
+setInterval(() => {
+    if (backgroundPlaybackExpected && !intentionalPause) {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        if (activeAudio.paused) activeAudio.play().catch(()=>{});
+    }
+}, 3000);
+    </script>
+</body>
+</html>

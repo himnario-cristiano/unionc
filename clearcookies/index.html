@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restableciendo aplicación...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* TEMA CLARO */
+            --bg-main: #F1F5F9;
+            --surface-solid: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent-color: #D97706;
+        }
+
+        [data-theme="dark"] {
+            /* TEMA OSCURO */
+            --bg-main: #00013B;
+            --surface-solid: #00013B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent-color: #FACC15;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--text-muted);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h2 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+    </style>
+    <script>
+        // Detectar y aplicar el tema actual antes de limpiar el almacenamiento
+        (function() {
+            const savedTheme = localStorage.getItem('app-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+</head>
+<body>
+
+    <div class="spinner"></div>
+    <h2>Restableciendo datos</h2>
+    <p>Borrando cookies, almacenamiento local y caché de la aplicación...</p>
+
+    <script>
+        function clearAllDataAndRedirect() {
+            // Guardamos temporalmente el tema actual para no perderlo de vista si fuera necesario, 
+            // aunque aquí localStorage.clear() limpiará todo como se solicitó originalmente al restablecer.
+            
+            // 1. Limpiar LocalStorage
+            localStorage.clear();
+
+            // 2. Limpiar SessionStorage
+            sessionStorage.clear();
+
+            // 3. Limpiar todas las Cookies
+            const cookies = document.cookie.split("; ");
+            for (let c = 0; c < cookies.length; c++) {
+                const d = window.location.hostname.split(".");
+                while (d.length > 0) {
+                    const cookieBase = encodeURIComponent(cookies[c].split(";")[0].split("=")[0]) + '=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=' + d.join('.') + ' ;path=';
+                    const p = location.pathname.split('/');
+                    document.cookie = cookieBase + '/';
+                    while (p.length > 0) {
+                        document.cookie = cookieBase + p.join('/');
+                        p.pop();
+                    }
+                    d.shift();
+                }
+            }
+
+            // 4. Desregistrar Service Workers (Elimina la caché de la PWA)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                }).catch(function(err) {
+                    console.log('Error al desregistrar Service Worker:', err);
+                });
+            }
+
+            // 5. Borrar la caché específica del navegador (Cache Storage API)
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
+
+            // Redirigir a la página principal después de 2 segundos para que el usuario vea el mensaje
+            setTimeout(() => {
+                window.location.href = "/elmelibero/"; 
+            }, 2000);
+        }
+
+        // Ejecutar la función inmediatamente al cargar la página
+        window.onload = clearAllDataAndRedirect;
+    </script>
+</body>
+</html>
