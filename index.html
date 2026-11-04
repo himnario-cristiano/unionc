@@ -7,7 +7,7 @@
 
     <link rel="icon" href="union-c.jpg" type="image/png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#00013B">
+    <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="union-c.jpg">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,9 +45,9 @@
 
         [data-theme="dark"] {
             /* TEMA OSCURO */
-            --bg-main: #00013B; 
+            --bg-main: #000000; 
             --surface-color: rgba(0, 0, 33, 0.85); 
-            --surface-solid: #00013B; 
+            --surface-solid: #000000; 
             --text-main: #F8FAFC;
             --text-muted: #94A3B8;
             --border-color: rgba(255, 255, 255, 0.12);
@@ -58,7 +58,7 @@
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
             --shadow-md: 0 4px 15px rgba(0,0,0,0.8);
             --shadow-player: 0 -10px 40px rgba(0,0,0,0.9);
-            --score-bg: #00013B;
+            --score-bg: #000000;
             --danger-color: #EF4444;
         }
 
@@ -531,7 +531,7 @@
    <!-- <div class="modal-overlay show" id="loginModal" style="background: var(--bg-main); z-index: 9999; opacity: 1; pointer-events: auto;">
         <div class="modal-content" style="box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div class="brand" style="justify-content: center; margin-bottom: 20px;">
-                <img src="el-me-libero.png" alt="Logo" style="width: 70px; height: 70px; border-radius: 15px;">
+                <img src="union-c.jpg" alt="Logo" style="width: 70px; height: 70px; border-radius: 15px;">
             </div>
             <h3 style="margin-bottom: 20px;">Iniciar Sesión</h3>
             
@@ -548,7 +548,7 @@
     <div class="install-banner" id="installBanner">
         <div class="install-banner-info">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            Instalar El Me Liberó
+            Instalar Union C
         </div>
         <div class="install-banner-actions">
             <button class="btn-install" id="btnInstallApp">Instalar</button>
@@ -562,8 +562,8 @@
     <header class="app-header">
         <div class="header-top">
             <div class="brand">
-                <img src="https://i.postimg.cc/8kJSRGkM/el-me-libero.png" alt="Logo">
-                El Me Liberó
+                <img src="union-c.jpg" alt="Logo">
+                Union C
             </div>
             <div class="header-actions">
                 <button class="btn-action stroke-icon" id="themeToggleBtn" title="Cambiar Tema">
@@ -1041,7 +1041,7 @@
         clearBtn.addEventListener('click', (e) => { e.stopPropagation(); clearModal.classList.add('show'); });
         closeClearModalBtn.addEventListener('click', () => clearModal.classList.remove('show'));
         clearModal.addEventListener('click', (e) => { if (e.target === clearModal) clearModal.classList.remove('show'); });
-        btnConfirmClear.addEventListener('click', () => { window.location.href = "/elmelibero/clearcookies/"; });
+        btnConfirmClear.addEventListener('click', () => { window.location.href = "/unionc/clearcookies/"; });
         
         let activeAudio = document.getElementById("audioPlayer1");
 let isGlobalAudioUnlocked = false;
@@ -1079,7 +1079,7 @@ function initializeGlobalPermissions() {
 document.addEventListener('click', initializeGlobalPermissions, { once: true });
 document.addEventListener('touchstart', initializeGlobalPermissions, { once: true });
 
-        const globalCoverUrl = "https://i.postimg.cc/8kJSRGkM/el-me-libero.png";
+        const globalCoverUrl = "union-c.jpg";
         let songIndex = 0; let isPlaying = false; let showOnlyFavorites = false; let playbackMode = 0; let isBuffering = false;
 
         const playlistEl = document.getElementById("playlistItems");
