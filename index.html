@@ -522,6 +522,42 @@
     fill: currentColor;
 }
     </style>
+
+    <script src="https://www.paypal.com/sdk/js?client-id=BAABu78DzMtCh_MPoExMqcEgMXG5MGBMqVTJOyKIa4BVNfkRf97OXo5kf48b6XTYUNCJimcqMDreYY1yvE&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
+    <style>
+        /* Ajuste en payment-info para soportar elementos apilados */
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Botón individual dentro de cada card */
+.card-pay-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-color);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-top: 8px;
+    transition: background 0.2s ease;
+}
+.card-pay-btn:hover {
+    background: var(--accent-hover);
+}
+
+/* Contenedor para botones Hosted de PayPal SDK */
+.paypal-sdk-container {
+    margin-top: 8px;
+    width: 100%;
+    max-width: 200px;
+}
+    </style>
 </head>
 <body>
 <!-- ================= MODAL DE LOGIN ================= -->
@@ -671,7 +707,7 @@
     </div>
 </div>
 
-<!-- Modal para Método de Peru -->
+<!-- Modal para Método de Perú -->
 <div class="modal-overlay" id="payModal1">
     <div class="modal-content">
         <button class="modal-close" onclick="document.getElementById('payModal1').classList.remove('show')">&times;</button>
@@ -681,6 +717,9 @@
             <div class="payment-info">
                 <strong>Yape / Plin:</strong> <span id="txt-yape">935180887</span><br>
                 <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+                
+                <!-- Botón debajo del Titular (Si href está vacío o es "#", se oculta) 
+                    <a href="" target="_blank" class="card-pay-btn optional-card-link">Pagar con Yape</a> -->
             </div>
             <button class="copy-btn" onclick="copyToClipboard('txt-yape', this)" title="Copiar número">
                 <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
@@ -689,7 +728,7 @@
     </div>
 </div>
 
-<!-- Modal para Método de Otro Pais -->
+<!-- Modal para Método de Otro País -->
 <div class="modal-overlay" id="payModal2">
     <div class="modal-content">
         <button class="modal-close" onclick="document.getElementById('payModal2').classList.remove('show')">&times;</button>
@@ -699,6 +738,9 @@
             <div class="payment-info">
                 <strong>BINANCE:</strong> <span id="txt-binance">935180887</span><br>
                 <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+                
+                <!-- Botón de Binance (Se oculta si no tiene enlace) 
+                <a href="" target="_blank" class="card-pay-btn optional-card-link">Pagar con Binance</a> -->
             </div>
             <button class="copy-btn" onclick="copyToClipboard('txt-binance', this)" title="Copiar ID">
                 <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
@@ -709,6 +751,12 @@
             <div class="payment-info">
                 <strong>PayPal:</strong> <span id="txt-paypal">jehisson43@gmail.com</span><br>
                 <small style="color: var(--text-muted);">Titular: Jehisson De La Cruz</small>
+                
+                <!-- OPCIÓN 1: Enlace directo a PayPal -->
+                <a href="https://www.paypal.com/ncp/payment/EY4A5Z88FU8WY" target="_blank" class="card-pay-btn optional-card-link">Pagar vía PayPal</a> 
+
+                <!-- OPCIÓN 2: Si deseas usar el botón nativo renderizado por el SDK de PayPal (descomentar si tienes el ID de botón)
+                    <div id="paypal-container-12345" class="paypal-sdk-container" data-button-id="EY4A5Z88FU8WY"></div> -->
             </div>
             <button class="copy-btn" onclick="copyToClipboard('txt-paypal', this)" title="Copiar correo">
                 <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
@@ -716,6 +764,7 @@
         </div>
     </div>
 </div>
+
 
     <div class="modal-overlay" id="clearModal">
         <div class="modal-content">
@@ -2168,6 +2217,49 @@ setInterval(() => {
         if (activeAudio.paused) activeAudio.play().catch(()=>{});
     }
 }, 3000);
+        // ================= CONTROL DE BOTONES DE ENLACE OPCIONALES =================
+function updateOptionalPayLinks() {
+    document.querySelectorAll('.optional-pay-link').forEach(btn => {
+        const url = btn.getAttribute('href') ? btn.getAttribute('href').trim() : '';
+        if (url && url !== '#' && url !== '') {
+            btn.style.display = 'inline-flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+}
+
+// Ejecutar la verificación al iniciar la app
+updateOptionalPayLinks();
+        function initCardPaymentLinks() {
+    // 1. Ocultar o mostrar enlaces tradicionales (.optional-card-link)
+    document.querySelectorAll('.optional-card-link').forEach(btn => {
+        const link = btn.getAttribute('href') ? btn.getAttribute('href').trim() : '';
+        if (link && link !== '#' && link !== '') {
+            btn.style.display = 'inline-flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+
+    // 2. Renderizar botones de PayPal SDK si existen contenedores configurados
+    document.querySelectorAll('.paypal-sdk-container').forEach(container => {
+        const buttonId = container.getAttribute('data-button-id');
+        if (buttonId && window.paypal && window.paypal.HostedButtons) {
+            container.style.display = 'block';
+            container.innerHTML = ''; // Limpiar renderizados previos
+            window.paypal.HostedButtons({
+                hostedButtonId: buttonId
+            }).render('#' + container.id);
+        } else {
+            container.style.display = 'none';
+        }
+    });
+}
+
+// Ejecutar al cargar el documento
+document.addEventListener('DOMContentLoaded', initCardPaymentLinks);
+initCardPaymentLinks();
     </script>
 </body>
 </html>
